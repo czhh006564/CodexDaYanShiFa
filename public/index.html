@@ -73,6 +73,19 @@
     </section>
   </main>
 
+  <section class="hexagram-search-strip wrap" aria-labelledby="hexagram-search-title">
+    <div>
+      <p class="search-strip-kicker">六十四卦资料库</p>
+      <h2 id="hexagram-search-title">想直接查一卦？</h2>
+      <p>按卦名、卦序或卦编号检索 V4 卦象资料。</p>
+    </div>
+    <form class="hexagram-search-form" action="lookup.html" method="get">
+      <label class="sr-only" for="hexagram-search-query">输入卦名或编号</label>
+      <input id="hexagram-search-query" name="q" type="search" required maxlength="40" placeholder="例如：乾、乾为天、1、01">
+      <button type="submit">查找卦象 <span aria-hidden="true">→</span></button>
+    </form>
+  </section>
+
   <footer class="site-footer wrap">
     <span>大衍筮法 · 周易占问</span>
     <button class="text-button" id="method-toggle" type="button" aria-expanded="false">起卦方法 <span>＋</span></button>

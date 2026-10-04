@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#112d2b">
+  <meta name="description" content="按卦名、卦序检索周易六十四卦的 V4 原典与卦象资料。">
+  <title>六十四卦检索 · 大衍易占</title>
+  <link rel="stylesheet" href="assets/app.css">
+  <script type="module" src="assets/lookup.js"></script>
+</head>
+<body class="lookup-page">
+  <header class="site-header result-header wrap">
+    <a class="brand" href="index.html" aria-label="返回大衍易占首页">
+      <span class="brand-seal" aria-hidden="true">易</span>
+      <span><strong>大衍</strong><small>YARROW DIVINATION</small></span>
+    </a>
+    <a class="back-button lookup-home-link" href="index.html"><span aria-hidden="true">←</span> 返回占卜首页</a>
+  </header>
+  <main class="lookup-wrap wrap">
+    <section class="lookup-search-card" aria-labelledby="lookup-title">
+      <p class="eyebrow-dark">V4 · 六十四卦数据库</p>
+      <h1 id="lookup-title">检索卦象资料</h1>
+      <p>输入卦名、卦序或编号，查看卦辞、爻辞、卦象关系、大衍资料与变化路径。</p>
+      <form class="lookup-search-form" id="lookup-search-form" action="lookup.html" method="get">
+        <label class="sr-only" for="lookup-query">输入卦名或编号</label>
+        <input id="lookup-query" name="q" type="search" list="hexagram-suggestions" maxlength="40" required placeholder="例如：乾、乾为天、1、01">
+        <datalist id="hexagram-suggestions"></datalist>
+        <button type="submit">查找卦象</button>
+      </form>
+      <p class="lookup-hint" id="lookup-status" role="status" aria-live="polite">支持卦名、全名、1—64 卦序及卦编号。</p>
+    </section>
+    <div class="lookup-result" id="lookup-result">
+      <div class="loading-state"><span class="loading-mark">易</span><p>正在读取 V4 卦象资料…</p></div>
+    </div>
+  </main>
+  <footer class="site-footer result-footer wrap">
+    <span>资料来源：项目内 V4 卦级数据库</span>
+    <span class="footer-mark">卦辞、爻辞与分析资料分层展示</span>
+  </footer>
+</body>
+</html>
