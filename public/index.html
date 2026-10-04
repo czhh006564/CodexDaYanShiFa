@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#112d2b">
+  <meta name="description" content="以大衍筮法逐爻起卦，查看本卦、动爻与卦象关系。">
+  <title>大衍 · 易占</title>
+  <link rel="stylesheet" href="assets/app.css">
+  <script type="module" src="assets/home.js"></script>
+</head>
+<body class="home-page">
+  <header class="site-header wrap">
+    <a class="brand" href="index.html" aria-label="大衍易占首页">
+      <span class="brand-seal" aria-hidden="true">易</span>
+      <span><strong>大衍</strong><small>YARROW DIVINATION</small></span>
+    </a>
+    <div class="header-note"><span class="status-dot"></span>以蓍草起卦 · 以原典读卦</div>
+  </header>
+
+  <main class="home-layout wrap">
+    <section class="home-intro" aria-labelledby="page-title">
+      <p class="eyebrow"><span class="eyebrow-line"></span>大衍筮法 · 周易占问</p>
+      <h1 id="page-title">把心中所问，<br><em>交给一卦推演。</em></h1>
+      <p class="intro-copy">静下心来，写下此刻真正想问的事。我们将按大衍筮法逐爻生成六爻，并依经文与卦象结构呈现本卦、动爻和变化关系。</p>
+      <div class="intro-seal" aria-hidden="true">
+        <span class="seal-ring seal-ring-outer"></span>
+        <span class="seal-ring seal-ring-inner"></span>
+        <span class="seal-character">蓍</span>
+        <span class="seal-caption">三变成爻<br>十八变成卦</span>
+      </div>
+      <div class="intro-principles">
+        <div><span class="principle-index">一</span><span><b>一爻三变</b><small>六爻自下而上生成</small></span></div>
+        <div><span class="principle-index">二</span><span><b>本卦为时</b><small>动爻为变化焦点</small></span></div>
+        <div><span class="principle-index">三</span><span><b>之卦示趋</b><small>呈现结构倾向，不作宿命断言</small></span></div>
+      </div>
+    </section>
+
+    <section class="question-card" aria-labelledby="question-title">
+      <div class="card-heading">
+        <div>
+          <p class="eyebrow eyebrow-dark">开始一次占问</p>
+          <h2 id="question-title">你想问什么？</h2>
+        </div>
+        <span class="step-count">01 <i>/</i> 02</span>
+      </div>
+      <form id="question-form">
+        <label class="field-label" for="question">写下具体、清晰的问题</label>
+        <div class="question-input-wrap">
+          <textarea id="question" name="question" maxlength="120" rows="3" required placeholder="例如：我今年是否适合更换工作？"></textarea>
+          <span class="input-counter"><span id="question-count">0</span> / 120</span>
+        </div>
+        <fieldset class="category-fieldset">
+          <legend class="field-label">选择占问类别</legend>
+          <div class="category-grid">
+            <label class="category-option"><input type="radio" name="category" value="事业工作" required><span>事业工作</span></label>
+            <label class="category-option"><input type="radio" name="category" value="婚姻感情"><span>婚姻感情</span></label>
+            <label class="category-option"><input type="radio" name="category" value="家庭家宅"><span>家庭家宅</span></label>
+            <label class="category-option"><input type="radio" name="category" value="朋友人际"><span>朋友人际</span></label>
+            <label class="category-option"><input type="radio" name="category" value="学业考试"><span>学业考试</span></label>
+            <label class="category-option"><input type="radio" name="category" value="财富财运"><span>财富财运</span></label>
+            <label class="category-option"><input type="radio" name="category" value="合作生意"><span>合作生意</span></label>
+            <label class="category-option"><input type="radio" name="category" value="出行迁移"><span>出行迁移</span></label>
+            <label class="category-option"><input type="radio" name="category" value="决策选择"><span>决策选择</span></label>
+            <label class="category-option"><input type="radio" name="category" value="综合其他"><span>综合其他</span></label>
+          </div>
+        </fieldset>
+        <button class="primary-button" type="submit">
+          <span>开始大衍起卦</span><span class="button-arrow" aria-hidden="true">↗</span>
+        </button>
+        <p class="form-footnote"><span aria-hidden="true">✦</span> 每一爻独立经过三变，六爻成卦；不是从六十四卦中抽签。</p>
+      </form>
+    </section>
+  </main>
+
+  <footer class="site-footer wrap">
+    <span>大衍筮法 · 周易占问</span>
+    <button class="text-button" id="method-toggle" type="button" aria-expanded="false">起卦方法 <span>＋</span></button>
+    <div class="method-popover" id="method-popover" hidden>
+      <b>一爻三变，六爻成卦</b>
+      <p>每爻以四十九策为用，依项目采用的揲蓍归奇分布生成 6、7、8、9。6 与 9 为动爻。六爻按初爻至上爻生成，共十八变。</p>
+      <p class="probability-line">6 老阴 1/16　·　7 少阳 5/16<br>8 少阴 7/16　·　9 老阳 3/16</p>
+      <small>概率用于理解标准揲蓍模型，不属于《周易》经文。</small>
+    </div>
+    <span class="footer-mark">陰陽相推，而生變化</span>
+  </footer>
+
+  <section class="ritual-overlay" id="ritual-overlay" aria-live="polite" aria-modal="true" role="dialog" aria-labelledby="ritual-title" hidden>
+    <div class="ritual-panel">
+      <div class="ritual-orbit" aria-hidden="true"><span>蓍</span></div>
+      <p class="eyebrow eyebrow-dark">十八变 · 六爻成卦</p>
+      <h2 id="ritual-title">正在推演你的卦</h2>
+      <p class="ritual-question" id="ritual-question"></p>
+      <div class="ritual-progress-track"><span id="ritual-progress"></span></div>
+      <p class="ritual-status" id="ritual-status">澄心定问，准备起卦</p>
+      <div class="ritual-lines" id="ritual-lines"></div>
+      <p class="ritual-note">六爻按初爻至上爻依次生成</p>
+    </div>
+  </section>
+</body>
+</html>

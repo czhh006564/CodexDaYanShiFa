@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#112d2b">
+  <meta name="description" content="查看本卦、动爻、变卦与互卦、错卦、综卦。">
+  <title>卦象结果 · 大衍易占</title>
+  <link rel="stylesheet" href="assets/app.css">
+  <script type="module" src="assets/result.js"></script>
+</head>
+<body class="result-page">
+  <header class="site-header result-header wrap">
+    <a class="brand" href="index.html" aria-label="返回大衍易占首页">
+      <span class="brand-seal" aria-hidden="true">易</span>
+      <span><strong>大衍</strong><small>YARROW DIVINATION</small></span>
+    </a>
+    <button class="back-button" id="new-question" type="button"><span aria-hidden="true">←</span> 再问一卦</button>
+  </header>
+
+  <main class="result-wrap wrap" id="result-root" aria-live="polite">
+    <div class="loading-state"><span class="loading-mark">易</span><p>正在载入卦象与原典资料…</p></div>
+  </main>
+
+  <footer class="site-footer result-footer wrap">
+    <span>判断主线：本卦 → 动爻 → 变卦</span>
+    <span class="footer-mark">辅助参考：互卦 · 错卦 · 综卦</span>
+  </footer>
+</body>
+</html>
