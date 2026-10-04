@@ -118,6 +118,10 @@ textarea:focus { border-color: #98885f; outline: none; background: #fffdf7; }
 .result-header .brand { color: var(--ink); }
 .result-header .brand small { color: #8e805f; }
 .result-header .brand-seal { color: #927c4e; }
+.result-actions { display: flex; align-items: center; gap: 10px; }
+.export-markdown-button { padding: 9px 12px; border: 1px solid #b7aa8b; background: #fbfaf6; color: #34473d; cursor: pointer; font-size: 12px; transition: background .18s, border-color .18s; }
+.export-markdown-button:hover { border-color: #8e7545; background: #f2eddf; }
+.export-markdown-button:disabled { opacity: .55; cursor: wait; }
 .back-button { padding: 10px 0 10px 12px; border: 0; background: transparent; color: #66736a; cursor: pointer; font-size: 11px; letter-spacing: .05em; }
 .back-button span { margin-right: 8px; color: #9b8659; font-size: 16px; }
 .result-wrap { min-height: calc(100vh - 150px); padding-block: 25px 46px; }
@@ -246,6 +250,9 @@ textarea:focus { border-color: #98885f; outline: none; background: #fffdf7; }
   .ritual-line { grid-template-columns: 36px 1fr auto; gap: 7px; padding: 7px 8px; }
   .ritual-line-result { min-width: 54px; font-size: 10px; }
   .result-header { padding-block: 13px; }
+  .result-actions { gap: 3px; }
+  .export-markdown-button { padding: 8px 7px; font-size: 11px; white-space: nowrap; }
+  .back-button { padding-left: 7px; }
   .result-wrap { padding-block: 14px 30px; }
   .question-summary { align-items: flex-start; padding: 13px 14px; }
   .question-summary h1 { font-size: 15px; }

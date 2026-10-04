@@ -7,6 +7,7 @@ newQuestion.addEventListener("click", () => {
   sessionStorage.removeItem("dayan-current-reading");
   window.location.assign("index.html");
 });
+const exportMarkdownButton = document.querySelector("#export-markdown");
 
 function escapeHtml(value) {
   return String(value ?? "").replace(/[&<>"']/g, character => ({
@@ -168,6 +169,155 @@ function renderHexContent(hex, key, baseHex, route, values, movingPositions, rul
   </div>`;
 }
 
+function markdownInline(value) {
+  return String(value ?? "").replace(/[\\`*_{}\[\]()#+.!|>]/g, "\\$&").replace(/\s+/g, " ").trim();
+}
+
+function markdownQuote(value) {
+  return String(value ?? "").trim().split(/\r?\n/).map(line => `> ${line}`).join("\n");
+}
+
+function appendMarkdownText(lines, heading, value) {
+  const text = safeText(value, "");
+  if (!text) return;
+  lines.push(`#### ${heading}`, text, "");
+}
+
+function renderMarkdownQuoteRecords(lines, heading, records) {
+  if (!records?.length) return;
+  lines.push(`### ${heading}`, "");
+  records.forEach(item => {
+    const label = [safeText(item.type, "相关原典").replaceAll("_", " · "), safeText(item.position, "")].filter(Boolean).join(" · ");
+    lines.push(`#### ${label}`, markdownQuote(item.text));
+    if (safeText(item.translation)) lines.push("", `译：${safeText(item.translation)}`);
+    lines.push("");
+  });
+}
+
+function buildMarkdown(reading, resolved, rules) {
+  const { hexByKey, movingPositions, route } = resolved;
+  const baseHex = hexByKey.base;
+  const timestamp = new Date(reading.createdAt);
+  const displayTime = Number.isNaN(timestamp.getTime())
+    ? "时间未记录"
+    : timestamp.toLocaleString("zh-CN", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
+  const movingRule = rules.moving_count_rules?.[String(movingPositions.length)] || {};
+  const lineNames = ["初", "二", "三", "四", "五", "上"];
+  const lineStates = { 6: "老阴", 7: "少阳", 8: "少阴", 9: "老阳" };
+  const rows = [
+    "# 大衍筮法 · 占问记录",
+    "",
+    `- **占问**：${markdownInline(reading.question)}`,
+    `- **类别**：${markdownInline(reading.category)}`,
+    `- **起卦时间**：${displayTime}`,
+    "- **起卦方式**：大衍筮法逐爻模拟；每爻经过三变得出 6、7、8、9 之一，六爻自下而上生成。",
+    "",
+    "## 六爻生成结果（自下而上）",
+    ""
+  ];
+
+  reading.lines.forEach((value, index) => {
+    const moving = value === 6 || value === 9;
+    rows.push(`- **${lineNames[index]}爻**：${lineStates[value]}（${value}）${moving ? " · 动爻" : ""}`);
+  });
+  rows.push("", `- **本卦**：${titleFor(baseHex)} ${baseHex.symbol || ""}`,
+    `- **动爻**：${movingPositions.length ? movingPositions.map(position => `${lineNames[position - 1]}爻`).join("、") : "无"}`,
+    `- **变卦**：${titleFor(hexByKey.changed)} ${hexByKey.changed.symbol || ""}`, "");
+
+  if (movingRule.historical_rule || movingRule.practical) {
+    rows.push("### 本次取辞规则", "");
+    if (movingRule.historical_rule) rows.push(`- **规则**：${movingRule.historical_rule}`);
+    if (movingRule.source_level) rows.push(`- **规则来源层级**：${movingRule.source_level}`);
+    if (movingRule.practical) rows.push("", movingRule.practical);
+    if (route.rule_note) rows.push("", route.rule_note);
+    rows.push("");
+  }
+  renderMarkdownQuoteRecords(rows, "本次路径主取文本", route.primary_texts);
+  renderMarkdownQuoteRecords(rows, "本次路径辅助文本", route.secondary_texts);
+
+  const relationInfo = {
+    mutual: ["互卦关系资料", baseHex.nuclear_hexagram],
+    opposite: ["错卦关系资料", baseHex.opposite_hexagram],
+    reverse: ["综卦关系资料", baseHex.reverse_hexagram]
+  };
+  const sections = [
+    ["base", "本卦"], ["changed", "变卦"], ["mutual", "互卦"],
+    ["opposite", "错卦"], ["reverse", "综卦"]
+  ];
+  sections.forEach(([key, label]) => {
+    const hex = hexByKey[key];
+    const composition = hex.trigram_composition || {};
+    const upper = composition.upper_trigram || {};
+    const lower = composition.lower_trigram || {};
+    rows.push(`## ${label}：${titleFor(hex)} ${hex.symbol || ""}`, "",
+      `- **上卦**：${safeText(upper.name, "未提供")}`,
+      `- **下卦**：${safeText(lower.name, "未提供")}`, "",
+      "### 卦辞", "", markdownQuote(hex.judgment_text?.original || "卦辞资料未提供"), "");
+    appendMarkdownText(rows, "直译", hex.judgment_translation?.literal_translation);
+    appendMarkdownText(rows, "释义", hex.judgment_translation?.interpretive_translation);
+    appendMarkdownText(rows, "卦义摘要", hex.judgment_exegesis?.core_message || hex.summaries?.one_sentence);
+    appendMarkdownText(rows, "需要留意", hex.judgment_exegesis?.risk_logic);
+    appendMarkdownText(rows, "卦在本次占问中的作用", hex.dayan_divination?.current_hexagram_role || hex.practical_role);
+    appendMarkdownText(rows, "《彖传》", hex.tuan?.original);
+    appendMarkdownText(rows, "《彖传》译文", hex.tuan?.translation);
+    appendMarkdownText(rows, "《彖传》说明", hex.tuan?.paragraph_explanation);
+    appendMarkdownText(rows, "《大象传》", hex.great_image?.original);
+    appendMarkdownText(rows, "《大象传》译文", hex.great_image?.translation);
+    appendMarkdownText(rows, "《大象传》应用边界", hex.great_image?.limits_of_application);
+
+    if (key === "base") {
+      appendMarkdownText(rows, "六爻演化", hex.six_line_arc?.compressed_chain);
+    }
+    const stages = hex.six_line_arc?.stages || [];
+    if (stages.length) {
+      rows.push("### 六爻爻辞", "");
+      [...stages].sort((a, b) => Number(a.stage_number) - Number(b.stage_number)).forEach(stage => {
+        const position = Number(stage.stage_number);
+        const isMoving = key === "base" && movingPositions.includes(position);
+        const changedIn = key === "changed" && movingPositions.includes(position);
+        rows.push(`#### ${safeText(stage.line_position, `${position}爻`)} · ${safeText(stage.stage_label, "")} ${isMoving ? "· 本次动爻" : changedIn ? "· 由本次动爻变化而来" : ""}`, "", markdownQuote(stage.original || "爻辞资料未提供"));
+        if (safeText(stage.translation)) rows.push("", `译：${stage.translation}`);
+        if (safeText(stage.role_in_arc)) rows.push("", `阶段说明：${stage.role_in_arc}`);
+        rows.push("");
+      });
+    }
+    if (key === "base" && movingPositions.length === 6 && hex.six_line_arc?.special_use) {
+      const special = hex.six_line_arc.special_use;
+      rows.push(`### ${safeText(special.line_position, "特殊用辞")}`, "", markdownQuote(special.original || ""));
+      if (safeText(special.translation)) rows.push("", `译：${special.translation}`);
+      if (safeText(special.note || special.role_in_arc)) rows.push("", safeText(special.note || special.role_in_arc));
+      rows.push("");
+    }
+    if (relationInfo[key]) {
+      const [relationTitle, relation] = relationInfo[key];
+      rows.push(`### ${relationTitle}`, "");
+      ["construction", "inner_dynamic", "interpretive_value", "caution", "opposite_condition",
+        "what_it_reveals", "reversed_viewpoint", "what_changes_when_viewpoint_reverses"]
+        .map(field => relation?.[field]).filter(Boolean).forEach(value => rows.push(value, ""));
+    }
+  });
+
+  rows.push("---", "", "资料来自本项目 V4 卦级数据库及 4096 变化路径索引。以上为原典与数据库内容整理，未包含 AI 吉凶断语。", "");
+  return rows.join("\n");
+}
+
+function downloadMarkdown(reading, resolved, rules) {
+  const content = buildMarkdown(reading, resolved, rules);
+  const date = new Date(reading.createdAt);
+  const dateLabel = Number.isNaN(date.getTime()) ? "占问记录" : `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, "0")}${String(date.getDate()).padStart(2, "0")}-${String(date.getHours()).padStart(2, "0")}${String(date.getMinutes()).padStart(2, "0")}`;
+  const hexagramSequence = String(resolved.hexByKey.base.sequence).padStart(2, "0");
+  const blob = new Blob([content], { type: "text/markdown;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = `大衍易占-${dateLabel}-${hexagramSequence}卦.md`;
+  anchor.hidden = true;
+  document.body.append(anchor);
+  anchor.click();
+  anchor.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
 function renderApp(reading, datasets) {
   const { hexagrams, routes, rules } = datasets;
   const resolved = createHexagramEngine(hexagrams, routes).resolve(reading.lines);
@@ -199,6 +349,8 @@ function renderApp(reading, datasets) {
     <section class="hex-detail-layout" id="hex-detail" role="tabpanel"></section>`;
 
   const pane = root.querySelector("#hex-detail");
+  exportMarkdownButton.disabled = false;
+  exportMarkdownButton.addEventListener("click", () => downloadMarkdown(reading, resolved, rules));
   function hideLineReading() {
     const popup = pane.querySelector("#line-reading-popover");
     if (popup) popup.hidden = true;
