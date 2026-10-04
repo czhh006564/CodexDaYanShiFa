@@ -47,11 +47,12 @@ function renderLines(hex, activePositions, values, key) {
     const transformed = key === "changed" && activePositions.includes(position);
     const yinYang = bit ? "阳" : "阴";
     const state = key === "base" ? lineState(values[index]) : (transformed ? "由动爻变入" : yinYang);
-    return `<div class="hex-line ${moving ? "is-moving" : ""}">
-      <span class="hex-line-position">${position === 1 ? "初" : position === 6 ? "上" : ["", "", "二", "三", "四", "五"][position]}爻</span>
+    const lineName = position === 1 ? "初" : position === 6 ? "上" : ["", "", "二", "三", "四", "五"][position];
+    return `<button class="hex-line ${moving ? "is-moving" : ""}" type="button" data-line-position="${position}" aria-expanded="false" aria-controls="line-reading-popover" aria-label="${lineName}爻，${yinYang}${moving ? "，本次动爻" : ""}，查看爻辞">
+      <span class="hex-line-position">${lineName}爻</span>
       <span class="line-mark ${bit ? "is-yang" : "is-yin"}" aria-label="${yinYang}爻">${bit ? "<i></i>" : "<i></i><i></i>"}</span>
       <span class="hex-line-state">${escapeHtml(state)}</span>
-    </div>`;
+    </button>`;
   }).join("");
 }
 
@@ -172,6 +173,10 @@ function renderApp(reading, datasets) {
   const resolved = createHexagramEngine(hexagrams, routes).resolve(reading.lines);
   const { hexByKey, movingPositions, route } = resolved;
   const baseHex = hexByKey.base;
+  let currentLineHex = baseHex;
+  let pinnedLinePosition = null;
+  let lastLineButton = null;
+  let suppressFocusPreview = false;
 
   const tabInfo = [
     ["base", "本卦"], ["changed", "变卦"], ["mutual", "互卦"],
@@ -194,8 +199,35 @@ function renderApp(reading, datasets) {
     <section class="hex-detail-layout" id="hex-detail" role="tabpanel"></section>`;
 
   const pane = root.querySelector("#hex-detail");
+  function hideLineReading() {
+    const popup = pane.querySelector("#line-reading-popover");
+    if (popup) popup.hidden = true;
+    pane.querySelectorAll(".hex-line[aria-expanded='true']").forEach(button => button.setAttribute("aria-expanded", "false"));
+  }
+  function showLineReading(button, pin = false) {
+    const popup = pane.querySelector("#line-reading-popover");
+    if (!popup) return;
+    const position = Number(button.dataset.linePosition);
+    const stage = currentLineHex.six_line_arc?.stages?.find(item => Number(item.stage_number) === position) || {};
+    const lineName = stage.line_position || `${position}爻`;
+    const readingValue = currentLineHex === baseHex ? lineState(reading.lines[position - 1]) : "";
+    const original = safeText(stage.original, "数据库暂未提供此爻的原文。");
+    const translation = safeText(stage.translation, "");
+    const role = safeText(stage.role_in_arc, "");
+    pane.querySelectorAll(".hex-line[aria-expanded='true']").forEach(item => item.setAttribute("aria-expanded", "false"));
+    button.setAttribute("aria-expanded", "true");
+    lastLineButton = button;
+    if (pin) pinnedLinePosition = position;
+    popup.innerHTML = `<div class="line-reading-heading"><div><span>第 ${position} 爻${readingValue ? ` · ${escapeHtml(readingValue)}` : ""}</span><h3>${escapeHtml(lineName)} · 爻辞</h3></div><button class="line-reading-close" type="button" data-close-line-reading aria-label="关闭爻辞">关闭</button></div>
+      <p class="line-reading-original">${escapeHtml(original)}</p>
+      ${translation ? `<p class="line-reading-translation">${escapeHtml(translation)}</p>` : ""}
+      ${role ? `<p class="line-reading-role">${escapeHtml(role)}</p>` : ""}`;
+    popup.hidden = false;
+  }
   function selectTab(key) {
     const hex = hexByKey[key];
+    currentLineHex = hex;
+    pinnedLinePosition = null;
     root.querySelectorAll(".hex-tab").forEach(button => button.setAttribute("aria-selected", String(button.dataset.key === key)));
     pane.setAttribute("aria-labelledby", `hex-tab-${key}`);
     const trigram = hex.trigram_composition || {};
@@ -217,12 +249,75 @@ function renderApp(reading, datasets) {
         <div class="trigram-label">上卦<b>${escapeHtml(upper.name || "")}</b></div>
         <div class="trigram-label">下卦<b>${escapeHtml(lower.name || "")}</b></div>
       </div>
-      <div class="hexagram-lines">${chart}</div>
+      <div class="hexagram-widget">
+        <div class="hexagram-lines">${chart}</div>
+        <aside class="line-reading-popover" id="line-reading-popover" aria-live="polite" hidden></aside>
+      </div>
       <div class="hexagram-note"><b>${escapeHtml(noteText)}</b><br>卦序 ${String(hex.sequence).padStart(2, "0")} · 六爻自下而上生成</div>
     </article>
     <article class="reading-card">${renderHexContent(hex, key, baseHex, route, reading.lines, movingPositions, rules)}</article>`;
   }
   const tabs = [...root.querySelectorAll(".hex-tab")];
+  pane.addEventListener("pointerover", event => {
+    const button = event.target.closest(".hex-line[data-line-position]");
+    if (button && !pinnedLinePosition) showLineReading(button);
+  });
+  pane.addEventListener("focusin", event => {
+    if (suppressFocusPreview) {
+      suppressFocusPreview = false;
+      return;
+    }
+    const button = event.target.closest(".hex-line[data-line-position]");
+    if (button && !pinnedLinePosition) showLineReading(button);
+  });
+  pane.addEventListener("pointerout", event => {
+    const widget = event.target.closest(".hexagram-widget");
+    if (widget && !widget.contains(event.relatedTarget) && !pinnedLinePosition) hideLineReading();
+  });
+  pane.addEventListener("focusout", event => {
+    const widget = event.target.closest(".hexagram-widget");
+    if (widget && !widget.contains(event.relatedTarget) && !pinnedLinePosition) hideLineReading();
+  });
+  pane.addEventListener("click", event => {
+    const close = event.target.closest("[data-close-line-reading]");
+    if (close) {
+      pinnedLinePosition = null;
+      hideLineReading();
+      suppressFocusPreview = true;
+      lastLineButton?.focus();
+      return;
+    }
+    const button = event.target.closest(".hex-line[data-line-position]");
+    if (button) {
+      const position = Number(button.dataset.linePosition);
+      if (pinnedLinePosition === position) {
+        pinnedLinePosition = null;
+        hideLineReading();
+      } else {
+        showLineReading(button, true);
+      }
+      return;
+    }
+    if (!event.target.closest(".hexagram-widget")) {
+      pinnedLinePosition = null;
+      hideLineReading();
+    }
+  });
+  document.addEventListener("keydown", event => {
+    const popup = pane.querySelector("#line-reading-popover");
+    if (event.key === "Escape" && popup && !popup.hidden) {
+      pinnedLinePosition = null;
+      hideLineReading();
+      suppressFocusPreview = true;
+      lastLineButton?.focus();
+    }
+  });
+  document.addEventListener("click", event => {
+    if (pinnedLinePosition && !event.target.closest(".hexagram-widget")) {
+      pinnedLinePosition = null;
+      hideLineReading();
+    }
+  });
   tabs.forEach(button => {
     button.addEventListener("click", () => selectTab(button.dataset.key));
     button.addEventListener("keydown", event => {
