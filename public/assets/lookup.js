@@ -79,7 +79,8 @@ const groups = [
 ];
 
 function esc(value) {
-  return String(value ?? '').replace(/[&<>\"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',\"'\":'&#39;'}[char]));
+  const entities = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+  return String(value ?? '').replace(/[&<>"']/g, char => entities[char]);
 }
 function label(key) { return labels[key] || String(key).replaceAll('_',' '); }
 function seqLabel(hex) { return String(hex.sequence).padStart(2,'0'); }
